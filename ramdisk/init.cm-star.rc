@@ -46,6 +46,10 @@ on fs
    write /data/misc/wifi/firmware_path ""
    chmod 0666 /data/misc/wifi/firmware_path
 
+   # Create this file in case it doesn't exist, needed to switch wifi modes:
+   write /data/misc/wifi/firmware_path ""
+   chmod 0666 /data/misc/wifi/firmware_path
+
 on post-fs
 
     chmod 0777 /data/misc/wifi/config_mac       # 20101202 mingi.sung@lge.com [WLAN] AT command - MAC address read/write function
