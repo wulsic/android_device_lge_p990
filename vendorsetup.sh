@@ -20,13 +20,13 @@ echo ""
 echo "Applying patches for P990"
 echo ""
 
-echo "Apply patch to frameworks/base"
-echo -n "Apply patch 0001-framework-base-patch.patch"
-(cd frameworks/base; git am ../../device/lge/p990/patches/0001-framework-base-patch.patch) > /dev/null 2>&1
+echo "Apply patch to frameworks/native"
+echo -n "Apply patch 0002-DisplayDevice-Backwards-compatibility-with-old-EGL.patch"
+(cd frameworks/native; git am ../../device/lge/p990/patches/0002-DisplayDevice-Backwards-compatibility-with-old-EGL.patch) > /dev/null 2>&1
 if [ $? == 0 ]; then
        echo "     [DONE]"
 else
-       (cd frameworks/base; git am --abort)
+       (cd frameworks/native; git am --abort)
        echo "     [FAIL]"
 fi
 
@@ -40,60 +40,12 @@ else
        echo "     [FAIL]"
 fi
 
-echo "Apply patch to frameworks/av"
-echo -n "Apply patch 0001-ifdef-for-ICS-Audio-Blob-compatibility.patch"
-(cd frameworks/av; git am ../../device/lge/p990/patches/0001-ifdef-for-ICS-Audio-Blob-compatibility.patch) > /dev/null 2>&1
+echo "Apply patch to external/ffmpeg"
+echo -n "Apply patch 0001-FFMPEG-Backwards-compatibility-with-non-neon-devices.patch"
+(cd external/ffmpeg; git am ../../device/lge/p990/patches/0001-FFMPEG-Backwards-compatibility-with-non-neon-devices.patch) > /dev/null 2>&1
 if [ $? == 0 ]; then
 	echo "     [DONE]"
 else
-	(cd frameworks/av; git am --abort)
-	echo "     [FAIL]"
-fi
-
-echo -n "Apply patch 0002-Add-missing-functions-and-signatures-for-older-OMX-v.patch"
-(cd frameworks/av; git am ../../device/lge/p990/patches/0002-Add-missing-functions-and-signatures-for-older-OMX-v.patch) > /dev/null 2>&1
-if [ $? == 0 ]; then
-	echo "     [DONE]"
-else
-	(cd frameworks/av; git am --abort)
-	echo "     [FAIL]"
-fi
-
-echo "Apply patch to external/skia"
-echo -n "Apply patch 0001-external-skia-patch.patch"
-(cd external/skia; git am ../../device/lge/p990/patches/0001-external-skia-patch.patch) > /dev/null 2>&1
-if [ $? == 0 ]; then
-	echo "     [DONE]"
-else
-	(cd external/skia; git am --abort)
-	echo "     [FAIL]"
-fi
-echo "Apply patch to bionic"
-echo -n "Apply patch 0003-Add-tegra2-to-bionic.patch"
-(cd bionic; git am ../device/lge/p990/patches/0003-Add-tegra2-to-bionic.patch) > /dev/null 2>&1
-if [ $? == 0 ]; then
-	echo "     [DONE]"
-else
-	(cd bionic; git am --abort)
-	echo "     [FAIL]"
-fi
-
-echo "Apply patch to external/chromium_org"
-echo -n "Apply patch 0001-Work-around-broken-GL_TEXTURE_BINDING_EXTERNAL_OES-q.patch"
-(cd external/chromium_org; git am ../../device/lge/p990/patches/0001-Work-around-broken-GL_TEXTURE_BINDING_EXTERNAL_OES-q.patch) > /dev/null 2>&1
-if [ $? == 0 ]; then
-	echo "     [DONE]"
-else
-	(cd external/chromium_org; git am --abort)
-	echo "     [FAIL]"
-fi
-
-echo "Apply patch to hardware/libhardware"
-echo -n "Apply patch 0001-Star-audio-patch.patch"
-(cd hardware/libhardware; git am ../../device/lge/p990/patches/0001-Star-audio-patch.patch) > /dev/null 2>&1
-if [ $? == 0 ]; then
-	echo "     [DONE]"
-else
-	(cd hardware/libhardware; git am --abort)
+	(cd external/ffmpeg; git am --abort)
 	echo "     [FAIL]"
 fi
