@@ -39,7 +39,7 @@ BOARD_VOLD_EMMC_SHARES_DEV_MAJOR := true
 BOARD_HAS_NO_MISC_PARTITION := true
 
 # Don't generate block mode update zips
-BLOCK_BASED_OTA := false
+BLOCK_BASED_OTA=false
 
 # Lollipop removes supports for NON PIE executables
 TARGET_NEEDS_NON_PIE_SUPPORT := true
@@ -57,12 +57,12 @@ BOARD_USE_USB_MASS_STORAGE_SWITCH := true
 BOARD_KERNEL_CMDLINE := 
 BOARD_KERNEL_BASE := 0x10000000
 BOARD_PAGE_SIZE := 0x00000800
-TARGET_KERNEL_SOURCE := kernel/lge/p990
-TARGET_KERNEL_CONFIG := kowalski_defconfig
+#TARGET_KERNEL_SOURCE := kernel/lge/p990
+#TARGET_KERNEL_CONFIG := kowalski_defconfig
 HAVE_SELINUX := false
 
 # Prebuilt kernel
-#TARGET_PREBUILT_KERNEL := $(LOCAL_PATH)kernel/zImage
+TARGET_PREBUILT_KERNEL := $(LOCAL_PATH)kernel/zImage
 
 # Wifi
 BOARD_WPA_SUPPLICANT_DRIVER := NL80211
