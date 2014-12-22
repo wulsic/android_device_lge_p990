@@ -39,7 +39,7 @@ BOARD_VOLD_EMMC_SHARES_DEV_MAJOR := true
 BOARD_HAS_NO_MISC_PARTITION := true
 
 # Don't generate block mode update zips
-BLOCK_BASED_OTA=false
+BLOCK_BASED_OTA := false
 
 # Lollipop removes supports for NON PIE executables
 TARGET_NEEDS_NON_PIE_SUPPORT := true
