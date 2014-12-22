@@ -20,6 +20,16 @@ echo ""
 echo "Applying patches for P990"
 echo ""
 
+echo "Apply patch to build/core"
+echo -n "0001-Don-t-use-Block-based-ota-if-defined-in-the-boardcon.patch"
+(cd build/core; git am ../../device/lge/p990/patches/0001-Don-t-use-Block-based-ota-if-defined-in-the-boardcon.patch) > /dev/null 2>&1
+if [ $? == 0 ]; then
+       echo "     [DONE]"
+else
+       (cd build/core; git am --abort)
+       echo "     [FAIL]"
+fi
+
 echo "Apply patch to frameworks/native"
 echo -n "Apply patch 0002-DisplayDevice-Backwards-compatibility-with-old-EGL.patch"
 (cd frameworks/native; git am ../../device/lge/p990/patches/0002-DisplayDevice-Backwards-compatibility-with-old-EGL.patch) > /dev/null 2>&1
