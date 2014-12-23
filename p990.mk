@@ -171,7 +171,7 @@ PRODUCT_COPY_FILES += \
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/twrp.fstab:recovery/root/etc/twrp.fstab
 
-#Disable SELinux since it needs some more configuration
+# Disable SELinux since it needs some more configuration
 PRODUCT_PROPERTY_OVERRIDES += \
     ro.boot.selinux=disabled \
     ro.build.selinux=0
