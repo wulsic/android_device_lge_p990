@@ -32,7 +32,7 @@ $(call inherit-product, $(SRC_TARGET_DIR)/product/full_base_telephony.mk)
 $(call inherit-product, device/lge/p990/p990.mk)
 
 # Discard inherited values and use our own instead.
-PRODUCT_MODEL := LG Optimus 2X
+PRODUCT_MODEL := Optimus 2X
 PRODUCT_BRAND := LGE
 PRODUCT_NAME := omni_p990
 PRODUCT_DEVICE := P990
