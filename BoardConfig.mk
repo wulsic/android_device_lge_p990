@@ -44,8 +44,8 @@ BLOCK_BASED_OTA := false
 # Lollipop removes supports for NON PIE executables
 TARGET_NEEDS_NON_PIE_SUPPORT := true
 
-# Include an expanded selection of fonts
-EXTENDED_FONT_FOOTPRINT := true
+# Use a smaller subset of system fonts to keep image size lower
+SMALLER_FONT_FOOTPRINT := true
 
 # Compat
 TARGET_USES_LOGD := false
@@ -57,6 +57,7 @@ BOARD_USE_USB_MASS_STORAGE_SWITCH := true
 BOARD_KERNEL_CMDLINE := 
 BOARD_KERNEL_BASE := 0x10000000
 BOARD_PAGE_SIZE := 0x00000800
+KERNEL_SRC:= 
 #TARGET_KERNEL_SOURCE := kernel/lge/p990
 #TARGET_KERNEL_CONFIG := kowalski_defconfig
 HAVE_SELINUX := false
@@ -129,9 +130,6 @@ BOARD_HAS_NO_SELECT_BUTTON := true
 TARGET_RECOVERY_FSTAB := $(LOCAL_PATH)ramdisk/fstab.star
 RECOVERY_FSTAB_VERSION := 2
 
-# Jemalloc causes a lot of random crash on free()
-MALLOC_IMPL := dlmalloc
-
 # Enable Minikin text layout engine
 USE_MINIKIN := true
 
@@ -159,6 +157,11 @@ TARGET_USE_OS := true
 
 # Testing
 BOARD_MALLOC_ALIGNMENT := 16
+TARGET_EXTRA_CFLAGS := $(call cc-option,-mtune=cortex-a9) $(call cc-option,-mcpu=cortex-a9)
+
+#define to use all of the Linaro Cortex-A9 optimized string funcs,
+#instead of subset known to work on all machines
+USE_ALL_OPTIMIZED_STRING_FUNCS := true
 
 # Skip droiddoc build to save build time
 BOARD_SKIP_ANDROID_DOC_BUILD := true

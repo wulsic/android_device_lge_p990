@@ -13,13 +13,8 @@ PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/recovery/postrecoveryboot.sh:recovery/root/sbin/postrecoveryboot.sh \
     $(LOCAL_PATH)/egl.cfg:system/lib/egl/egl.cfg \
     $(LOCAL_PATH)/prebuilt/setup-recovery:system/bin/setup-recovery \
-
-# Wifi files
-PRODUCT_PACKAGES += \
-	dhcpcd.conf \
-	hostapd \
-	wpa_supplicant \
-	wpa_supplicant.conf
+    $(LOCAL_PATH)/wpa_supplicant.conf:system/etc/wifi/wpa_supplicant.conf \
+    $(LOCAL_PATH)/dhcpcd.conf:system/etc/dhcpcd/dhcpcd.conf
 
 # Audio files
 PRODUCT_COPY_FILES += \
@@ -29,9 +24,6 @@ PRODUCT_COPY_FILES += \
 # media files
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/media_profiles.xml:system/etc/media_profiles.xml \
-    frameworks/av/media/libstagefright/data/media_codecs_google_audio.xml:system/etc/media_codecs_google_audio.xml \
-    frameworks/av/media/libstagefright/data/media_codecs_google_telephony.xml:system/etc/media_codecs_google_telephony.xml \
-    frameworks/av/media/libstagefright/data/media_codecs_google_video.xml:system/etc/media_codecs_google_video.xml \
     $(LOCAL_PATH)/media_codecs.xml:system/etc/media_codecs.xml
 
 PRODUCT_COPY_FILES += \
@@ -59,6 +51,7 @@ PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.usb.accessory.xml:system/etc/permissions/android.hardware.usb.accessory.xml
 
 PRODUCT_PROPERTY_OVERRIDES += \
+    ro.bq.gpu_to_cpu_unsupported=1 \
     sys.disable_ext_animation=1 \
     ro.telephony.call_ring.multiple=false \
     ro.telephony.call_ring.delay=3000 \
@@ -99,9 +92,6 @@ PRODUCT_PROPERTY_OVERRIDES += \
 PRODUCT_PROPERTY_OVERRIDES += \
     ro.zygote.disable_gl_preload=true
 
-# Always use the CPU pipeline for taking screenshots
-ro.bq.gpu_to_cpu_unsupported=true \
-
 # Disable JIT code cache to free up some ram when the device is running
 PRODUCT_PROPERTY_OVERRIDES += \
     dalvik.vm.jit.codecachesize=0
@@ -139,8 +129,7 @@ PRODUCT_PACKAGES += \
     audio.a2dp.default \
     audio.usb.default \
     hwcomposer.default \
-    com.android.future.usb.accessory \
-    e2fsck \
+    com.android.future.usb.accessory
 
 # Enable Torch
 PRODUCT_PACKAGES += Torch
@@ -171,7 +160,7 @@ PRODUCT_COPY_FILES += \
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/twrp.fstab:recovery/root/etc/twrp.fstab
 
-# Disable SELinux since it needs some more configuration
+#Disable SELinux since it needs some more configuration
 PRODUCT_PROPERTY_OVERRIDES += \
     ro.boot.selinux=disabled \
     ro.build.selinux=0
