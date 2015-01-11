@@ -133,9 +133,6 @@ RECOVERY_FSTAB_VERSION := 2
 # Enable Minikin text layout engine
 USE_MINIKIN := true
 
-# Since some recoveries don't support the "set_metadata" command, try not use them
-USE_SET_METADATA := false
-SKIP_SET_METADATA := true
 
 # Sensors
 BOARD_SYSFS_LIGHT_SENSOR := "/sys/class/backlight/aat2870-backlight/brightness_mode"
