@@ -1,0 +1,484 @@
+From b10dfe3f66251535236160b0e0d583bfca50f735 Mon Sep 17 00:00:00 2001
+From: Wulsic <wulsic@hotmail.com>
+Date: Wed, 14 Jan 2015 19:31:53 +0100
+Subject: [PATCH 1/1] Non Neon Cortex-A9 bionic This patch allows us to use the
+ linaro non neon bionics on our builds so it can boot instead of using the generic bionic.
+
+Change-Id: I6515aadeca4fb5c2638bb5ad3dfce0b3f922388f
+---
+ libc/arch-arm/cortex-a9/bionic-linaro/memset.S | 119 ++++++++++++++++
+ libc/arch-arm/cortex-a9/bionic-linaro/strcpy.c | 179 +++++++++++++++++++++++++
+ libc/arch-arm/cortex-a9/bionic-linaro/strlen.S | 113 ++++++++++++++++
+ libc/arch-arm/cortex-a9/cortex-a9.mk           |  30 +++--
+ 4 files changed, 431 insertions(+), 10 deletions(-)
+ create mode 100644 libc/arch-arm/cortex-a9/bionic-linaro/memset.S
+ create mode 100644 libc/arch-arm/cortex-a9/bionic-linaro/strcpy.c
+ create mode 100644 libc/arch-arm/cortex-a9/bionic-linaro/strlen.S
+
+diff --git a/libc/arch-arm/cortex-a9/bionic-linaro/memset.S b/libc/arch-arm/cortex-a9/bionic-linaro/memset.S
+new file mode 100644
+index 0000000..d1bcbe8
+--- /dev/null
++++ b/libc/arch-arm/cortex-a9/bionic-linaro/memset.S
+@@ -0,0 +1,119 @@
++/* Copyright (c) 2010-2011, Linaro Limited
++   All rights reserved.
++
++   Redistribution and use in source and binary forms, with or without
++   modification, are permitted provided that the following conditions
++   are met:
++
++      * Redistributions of source code must retain the above copyright
++      notice, this list of conditions and the following disclaimer.
++
++      * Redistributions in binary form must reproduce the above copyright
++      notice, this list of conditions and the following disclaimer in the
++      documentation and/or other materials provided with the distribution.
++
++      * Neither the name of Linaro Limited nor the names of its
++      contributors may be used to endorse or promote products derived
++      from this software without specific prior written permission.
++
++   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++   HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++
++   Written by Dave Gilbert <david.gilbert@linaro.org>
++   Adapted to Bionic by Bernhard Rosenkraenzer <Bernhard.Rosenkranzer@linaro.org>
++
++   This memset routine is optimised on a Cortex-A9 and should work on
++   all ARMv7 processors. */
++
++#include <machine/asm.h>
++
++	.syntax unified
++	.arch armv7-a
++
++@ 2011-08-30 david.gilbert@linaro.org
++@    Extracted from local git 2f11b436
++
++@ this lets us check a flag in a 00/ff byte easily in either endianness
++#ifdef __ARMEB__
++#define CHARTSTMASK(c) 1<<(31-(c*8))
++#else
++#define CHARTSTMASK(c) 1<<(c*8)
++#endif
++	.text
++	.thumb
++
++@ ---------------------------------------------------------------------------
++	.thumb_func
++	.p2align 4,,15
++ENTRY(memset)
++	@ r0 = address
++	@ r1 = character
++	@ r2 = count
++	@ returns original address in r0
++
++	mov	r3, r0		@ Leave r0 alone
++	cbz	r2, 10f		@ Exit if 0 length
++
++	tst	r0, #7
++	beq	2f		@ Already aligned
++
++	@ Ok, so we're misaligned here
++1:
++	strb	r1, [r3], #1
++	subs	r2,r2,#1
++	tst	r3, #7
++	cbz	r2, 10f		@ Exit if we hit the end
++	bne	1b		@ go round again if still misaligned
++
++2:
++	@ OK, so we're aligned
++	push	{r4,r5,r6,r7}
++	bics	r4, r2, #15	@ if less than 16 bytes then need to finish it off
++	beq	5f
++
++3:
++	@ POSIX says that ch is cast to an unsigned char.  A uxtb is one
++	@ byte and takes two cycles, where an AND is four bytes but one
++	@ cycle.
++	and	r1, #0xFF
++	orr	r1, r1, r1, lsl#8	@ Same character into all bytes
++	orr	r1, r1, r1, lsl#16
++	mov	r5,r1
++	mov	r6,r1
++	mov	r7,r1
++
++4:
++	subs	r4,r4,#16
++	stmia	r3!,{r1,r5,r6,r7}
++	bne	4b
++	and	r2,r2,#15
++
++	@ At this point we're still aligned and we have upto align-1 bytes left to right
++	@ we can avoid some of the byte-at-a time now by testing for some big chunks
++	tst	r2,#8
++	itt	ne
++	subne	r2,r2,#8
++	stmiane	r3!,{r1,r5}
++
++5:
++	pop	{r4,r5,r6,r7}
++	cbz	r2, 10f
++
++	@ Got to do any last < alignment bytes
++6:
++	subs	r2,r2,#1
++	strb	r1,[r3],#1
++	bne	6b
++
++10:
++	bx	lr		@ goodbye
++END(memset)
+diff --git a/libc/arch-arm/cortex-a9/bionic-linaro/strcpy.c b/libc/arch-arm/cortex-a9/bionic-linaro/strcpy.c
+new file mode 100644
+index 0000000..ce74de6
+--- /dev/null
++++ b/libc/arch-arm/cortex-a9/bionic-linaro/strcpy.c
+@@ -0,0 +1,179 @@
++/*
++ * Copyright (c) 2008 ARM Ltd
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the company may not be used to endorse or promote
++ *    products derived from this software without specific prior written
++ *    permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY ARM LTD ``AS IS'' AND ANY EXPRESS OR IMPLIED
++ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL ARM LTD BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
++ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
++ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
++ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
++ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
++ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include <string.h>
++
++#ifdef __thumb2__
++#define magic1(REG) "#0x01010101"
++#define magic2(REG) "#0x80808080"
++#else
++#define magic1(REG) #REG
++#define magic2(REG) #REG ", lsl #7"
++#endif
++
++#pragma GCC diagnostic push
++/* gcc fails to see the fat that the assembly code
++ * takes care of a return value, causing a
++ * "control reaches end of non-void function"
++ * warning (and, of course, error when building
++ * with -Werror).
++ * Let's disable that warning just for this
++ * function, where we know it's bogus. */
++#pragma GCC diagnostic ignored "-Wreturn-type"
++
++char* __attribute__((naked))
++strcpy (char* dst, const char* src)
++{
++  asm (
++#if !(defined(__OPTIMIZE_SIZE__) || defined (PREFER_SIZE_OVER_SPEED) || \
++      (defined (__thumb__) && !defined (__thumb2__)))
++       "pld	[r1, #0]\n\t"
++       "eor	r2, r0, r1\n\t"
++       "mov	ip, r0\n\t"
++       "tst	r2, #3\n\t"
++       "bne	4f\n\t"
++       "tst	r1, #3\n\t"
++       "bne	3f\n"
++  "5:\n\t"
++#ifndef __thumb2__
++       "str	r5, [sp, #-4]!\n\t"
++       "mov	r5, #0x01\n\t"
++       "orr	r5, r5, r5, lsl #8\n\t"
++       "orr	r5, r5, r5, lsl #16\n\t"
++#endif
++
++       "str	r4, [sp, #-4]!\n\t"
++       "tst	r1, #4\n\t"
++       "ldr	r3, [r1], #4\n\t"
++       "beq	2f\n\t"
++       "sub	r2, r3, "magic1(r5)"\n\t"
++       "bics	r2, r2, r3\n\t"
++       "tst	r2, "magic2(r5)"\n\t"
++       "itt	eq\n\t"
++       "streq	r3, [ip], #4\n\t"
++       "ldreq	r3, [r1], #4\n"
++       "bne	1f\n\t"
++       /* Inner loop.  We now know that r1 is 64-bit aligned, so we
++	  can safely fetch up to two words.  This allows us to avoid
++	  load stalls.  */
++       ".p2align 2\n"
++  "2:\n\t"
++       "pld	[r1, #8]\n\t"
++       "ldr	r4, [r1], #4\n\t"
++       "sub	r2, r3, "magic1(r5)"\n\t"
++       "bics	r2, r2, r3\n\t"
++       "tst	r2, "magic2(r5)"\n\t"
++       "sub	r2, r4, "magic1(r5)"\n\t"
++       "bne	1f\n\t"
++       "str	r3, [ip], #4\n\t"
++       "bics	r2, r2, r4\n\t"
++       "tst	r2, "magic2(r5)"\n\t"
++       "itt	eq\n\t"
++       "ldreq	r3, [r1], #4\n\t"
++       "streq	r4, [ip], #4\n\t"
++       "beq	2b\n\t"
++       "mov	r3, r4\n"
++  "1:\n\t"
++#ifdef __ARMEB__
++       "rors	r3, r3, #24\n\t"
++#endif
++       "strb	r3, [ip], #1\n\t"
++       "tst	r3, #0xff\n\t"
++#ifdef __ARMEL__
++       "ror	r3, r3, #8\n\t"
++#endif
++       "bne	1b\n\t"
++       "ldr	r4, [sp], #4\n\t"
++#ifndef __thumb2__
++       "ldr	r5, [sp], #4\n\t"
++#endif
++       "BX LR\n"
++
++       /* Strings have the same offset from word alignment, but it's
++	  not zero.  */
++  "3:\n\t"
++       "tst	r1, #1\n\t"
++       "beq	1f\n\t"
++       "ldrb	r2, [r1], #1\n\t"
++       "strb	r2, [ip], #1\n\t"
++       "cmp	r2, #0\n\t"
++       "it	eq\n"
++       "BXEQ LR\n"
++  "1:\n\t"
++       "tst	r1, #2\n\t"
++       "beq	5b\n\t"
++       "ldrh	r2, [r1], #2\n\t"
++#ifdef __ARMEB__
++       "tst	r2, #0xff00\n\t"
++       "iteet	ne\n\t"
++       "strneh	r2, [ip], #2\n\t"
++       "lsreq	r2, r2, #8\n\t"
++       "streqb	r2, [ip]\n\t"
++       "tstne	r2, #0xff\n\t"
++#else
++       "tst	r2, #0xff\n\t"
++       "itet	ne\n\t"
++       "strneh	r2, [ip], #2\n\t"
++       "streqb	r2, [ip]\n\t"
++       "tstne	r2, #0xff00\n\t"
++#endif
++       "bne	5b\n\t"
++       "BX LR\n"
++
++       /* src and dst do not have a common word-alignement.  Fall back to
++	  byte copying.  */
++  "4:\n\t"
++       "ldrb	r2, [r1], #1\n\t"
++       "strb	r2, [ip], #1\n\t"
++       "cmp	r2, #0\n\t"
++       "bne	4b\n\t"
++       "BX LR"
++
++#elif !defined (__thumb__) || defined (__thumb2__)
++       "mov	r3, r0\n\t"
++  "1:\n\t"
++       "ldrb	r2, [r1], #1\n\t"
++       "strb	r2, [r3], #1\n\t"
++       "cmp	r2, #0\n\t"
++       "bne	1b\n\t"
++       "BX LR"
++#else
++       "mov	r3, r0\n\t"
++  "1:\n\t"
++       "ldrb	r2, [r1]\n\t"
++       "add	r1, r1, #1\n\t"
++       "strb	r2, [r3]\n\t"
++       "add	r3, r3, #1\n\t"
++       "cmp	r2, #0\n\t"
++       "bne	1b\n\t"
++       "BX LR"
++#endif
++       );
++}
++
++#pragma GCC diagnostic pop
+diff --git a/libc/arch-arm/cortex-a9/bionic-linaro/strlen.S b/libc/arch-arm/cortex-a9/bionic-linaro/strlen.S
+new file mode 100644
+index 0000000..5b76826
+--- /dev/null
++++ b/libc/arch-arm/cortex-a9/bionic-linaro/strlen.S
+@@ -0,0 +1,113 @@
++/* Copyright (c) 2010-2011, Linaro Limited
++   All rights reserved.
++
++   Redistribution and use in source and binary forms, with or without
++   modification, are permitted provided that the following conditions
++   are met:
++
++      * Redistributions of source code must retain the above copyright
++      notice, this list of conditions and the following disclaimer.
++
++      * Redistributions in binary form must reproduce the above copyright
++      notice, this list of conditions and the following disclaimer in the
++      documentation and/or other materials provided with the distribution.
++
++      * Neither the name of Linaro Limited nor the names of its
++      contributors may be used to endorse or promote products derived
++      from this software without specific prior written permission.
++
++   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++   HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++
++   Written by Dave Gilbert <david.gilbert@linaro.org>
++   Adapted to Bionic by Bernhard Rosenkraenzer <bernhard.rosenkranzer@linaro.org>
++
++   This strlen routine is optimised on a Cortex-A9 and should work on
++   all ARMv7 processors.   This routine is reasonably fast for short
++   strings, but is probably slower than a simple implementation if all
++   your strings are very short */
++
++@ 2011-02-08 david.gilbert@linaro.org
++@    Extracted from local git 6848613a
++
++
++@ this lets us check a flag in a 00/ff byte easily in either endianness
++
++#include <machine/asm.h>
++
++#ifdef __ARMEB__
++#define CHARTSTMASK(c) 1<<(31-(c*8))
++#else
++#define CHARTSTMASK(c) 1<<(c*8)
++#endif
++
++@-----------------------------------------------------------------------------------------------------------------------------
++	.syntax unified
++	.arch armv7-a
++
++	.thumb_func
++	.p2align 4,,15
++ENTRY(strlen)
++	@ r0 = string
++	@ returns count of bytes in string not including terminator
++	mov	r1, r0
++	push	{ r4,r6 }
++	mvns	r6, #0		@ all F
++	movs	r4, #0
++	tst	r0, #7
++	beq	2f
++
++1:
++	ldrb	r2, [r1], #1
++	tst	r1, #7		@ Hit alignment yet?
++	cbz	r2, 10f		@ Exit if we found the 0
++	bne	1b
++
++	@ So we're now aligned
++2:
++	ldmia	r1!,{r2,r3}
++	uadd8	r2, r2, r6	@ Parallel add 0xff - sets the GE bits for anything that wasn't 0
++	sel	r2, r4, r6	@ bytes are 00 for none-00 bytes, or ff for 00 bytes - NOTE INVERSION
++	uadd8	r3, r3, r6	@ Parallel add 0xff - sets the GE bits for anything that wasn't 0
++	sel	r3, r2, r6	@ bytes are 00 for none-00 bytes, or ff for 00 bytes - NOTE INVERSION
++	cmp	r3, #0
++	beq	2b
++
++strlenendtmp:
++	@ One (or more) of the bytes we loaded was 0 - but which one?
++	@ r2 has the mask corresponding to the first loaded word
++	@ r3 has a combined mask of the two words - but if r2 was all-non 0
++	@ then it's just the 2nd words
++	cmp	r2, #0
++	itte	eq
++	moveq	r2, r3		@ the end is in the 2nd word
++	subeq	r1,r1,#3
++	subne	r1,r1,#7
++
++	@ r1 currently points to the 2nd byte of the word containing the 0
++	tst	r2, # CHARTSTMASK(0)	@ 1st character
++	bne	10f
++	adds	r1,r1,#1
++	tst	r2, # CHARTSTMASK(1)	@ 2nd character
++	ittt	eq
++	addeq	r1,r1,#1
++	tsteq	r2, # (3<<15)	@ 2nd & 3rd character
++	@ If not the 3rd must be the last one
++	addeq	r1,r1,#1
++
++10:
++	@ r0 is still at the beginning, r1 is pointing 1 byte after the terminator
++	sub	r0, r1, r0
++	subs	r0, r0, #1
++	pop	{ r4, r6 }
++	bx	lr
++END(strlen)
+diff --git a/libc/arch-arm/cortex-a9/cortex-a9.mk b/libc/arch-arm/cortex-a9/cortex-a9.mk
+index 9b99387..1719f53 100644
+--- a/libc/arch-arm/cortex-a9/cortex-a9.mk
++++ b/libc/arch-arm/cortex-a9/cortex-a9.mk
+@@ -1,10 +1,20 @@
+-libc_bionic_src_files_arm += \
+-    arch-arm/cortex-a9/bionic/memcpy.S \
+-    arch-arm/cortex-a9/bionic/memset.S \
+-    arch-arm/cortex-a9/bionic/strcat.S \
+-    arch-arm/cortex-a9/bionic/strcmp.S \
+-    arch-arm/cortex-a9/bionic/strcpy.S \
+-    arch-arm/cortex-a9/bionic/strlen.S \
+-    arch-arm/cortex-a9/bionic/__strcat_chk.S \
+-    arch-arm/cortex-a9/bionic/__strcpy_chk.S \
+-    bionic/memmove.c \
++$(call libc-add-cpu-variant-src,STRCAT,arch-arm/cortex-a9/bionic/strcat.S)
++$(call libc-add-cpu-variant-src,STRCMP,arch-arm/cortex-a9/bionic/strcmp.S)
++
++ifeq ($(strip $(ARCH_ARM_HAVE_NEON)),true)
++$(call libc-add-cpu-variant-src,MEMCPY,arch-arm/cortex-a9/bionic/memcpy.S)
++$(call libc-add-cpu-variant-src,MEMSET,arch-arm/cortex-a9/bionic/memset.S)
++
++$(call libc-add-cpu-variant-src,STRCPY,arch-arm/cortex-a9/bionic/strcpy.S)
++$(call libc-add-cpu-variant-src,STRLEN,arch-arm/cortex-a9/bionic/strlen.S)
++
++$(call libc-add-cpu-variant-src,__STRCAT_CHK,arch-arm/cortex-a9/bionic/__strcat_chk.S)
++$(call libc-add-cpu-variant-src,__STRCPY_CHK,arch-arm/cortex-a9/bionic/__strcpy_chk.S)
++else
++$(call libc-add-cpu-variant-src,STRCPY,arch-arm/cortex-a9/bionic-linaro/strcpy.c)
++$(call libc-add-cpu-variant-src,STRLEN,arch-arm/cortex-a9/bionic-linaro/strlen.S)
++endif
++
++include bionic/libc/arch-arm/generic/generic.mk
++
++#    bionic/memmove.c \
+-- 
+1.9.1
+
