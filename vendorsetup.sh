@@ -32,7 +32,7 @@ fi
 
 echo "Apply patch to bionic"
 echo -n "Apply patch 0001-Non-Neon-Cortex-A9-bionic.patch"
-(cd bionic; git am ../../device/lge/p990/patches/0001-Non-Neon-Cortex-A9-bionic.patch) > /dev/null 2>&1
+(cd bionic; git am ../device/lge/p990/patches/0001-Non-Neon-Cortex-A9-bionic.patch) > /dev/null 2>&1
 if [ $? == 0 ]; then
        echo "     [DONE]"
 else
