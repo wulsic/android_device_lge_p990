@@ -1,5 +1,5 @@
 From 6a050effb8992b2c6fcef5f8afde6ac9d9e8c6e0 Mon Sep 17 00:00:00 2001
-From: Wulsic <wulsic@hotmail.com>
+From: Nathan Chan <e334cn@gmail.com>
 Date: Mon, 16 Feb 2015 23:23:55 +0100
 Subject: [PATCH 1/1] #ifdef for ICS Audio Blob compatibility
 

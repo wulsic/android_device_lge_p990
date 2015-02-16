@@ -1,9 +1,11 @@
 From 93da1d76fead2b21514b33c6875c4a33e9abbf2f Mon Sep 17 00:00:00 2001
-From: Wulsic <wulsic@hotmail.com>
+From: hjunii <hjunii@gmail.com>
 Date: Mon, 16 Feb 2015 23:18:10 +0100
 Subject: [PATCH 1/1] Add missing functions and signatures for older OMX video
- libs compat Nvidia OMX libs need these to work That fixes hardware OMX video
- codecs + Camera on P990
+ libs compat
+
+Nvidia OMX libs need these to work
+That fixes hardware OMX video codecs + Camera on P990
 
 Change-Id: I3ca588934044d5eedb6be9008b9ca2557ca0290d
 ---
