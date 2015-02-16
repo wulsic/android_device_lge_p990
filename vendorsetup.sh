@@ -78,3 +78,13 @@ else
 	(cd hardware/libhardware; git am --abort)
 	echo "     [FAIL]"
 fi
+
+echo "Apply patch to build/core"
+echo -n "0001-Disable-block-based-ota.patch"
+(cd build/core; git am ../../device/lge/p990/patches/0001-Disable-block-based-ota.patch) > /dev/null 2>&1
+if [ $? == 0 ]; then
+       echo "     [DONE]"
+else
+       (cd build/core; git am --abort)
+       echo "     [FAIL]"
+fi

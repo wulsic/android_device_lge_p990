@@ -1,0 +1,34 @@
+From 1ab3c7bdfc3434869cff54c71a26fb067653604f Mon Sep 17 00:00:00 2001
+From: Wulsic <wulsic@hotmail.com>
+Date: Tue, 17 Feb 2015 00:43:25 +0100
+Subject: [PATCH 1/1] Disable block based ota
+
+Change-Id: I6104d7e70f959f5744eae4138c7059ee5e2b30d9
+---
+ core/Makefile | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/core/Makefile b/core/Makefile
+index d8d21dc..2d887a4 100644
+--- a/core/Makefile
++++ b/core/Makefile
+@@ -1592,11 +1592,15 @@ else
+     $(INTERNAL_OTA_PACKAGE_TARGET): mount_by_label := false
+ endif
+ 
++ifneq ($(BLOCK_BASED_OTA),false)
++    $(INTERNAL_OTA_PACKAGE_TARGET): block_based_ota := --block
++endif
++
+ $(INTERNAL_OTA_PACKAGE_TARGET): $(BUILT_TARGET_FILES_PACKAGE) $(DISTTOOLS)
+ 	@echo -e ${PRT_HST}"Package OTA: $@"${CL_RST}
+ 	MKBOOTIMG=$(BOARD_CUSTOM_BOOTIMG_MK) \
+ 	$(OTA_FROM_TARGET_SCRIPT) -v \
+-	   $(if $(CUSTOM_BUILD),, --block) \
++	   $(block_based_ota) \
+ 	   -p $(HOST_OUT) \
+ 	   -k $(KEY_CERT_PAIR) \
+ 	   --backup=$(backuptool) \
+-- 
+1.9.1
+
