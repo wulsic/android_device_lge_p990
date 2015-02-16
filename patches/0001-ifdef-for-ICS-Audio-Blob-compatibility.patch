@@ -1,0 +1,37 @@
+From 6a050effb8992b2c6fcef5f8afde6ac9d9e8c6e0 Mon Sep 17 00:00:00 2001
+From: Wulsic <wulsic@hotmail.com>
+Date: Mon, 16 Feb 2015 23:23:55 +0100
+Subject: [PATCH 1/1] #ifdef for ICS Audio Blob compatibility
+
+see hardware/libhardware/include/hardware/audio.h, get_presentation_position is not defined when ICS_AUDIO_BLOB flag is enabled
+
+Change-Id: Ie5abf28b385a4fcdac78251a2fbd9d52ab0a1466
+---
+ media/libnbaio/AudioStreamOutSink.cpp | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/media/libnbaio/AudioStreamOutSink.cpp b/media/libnbaio/AudioStreamOutSink.cpp
+index 0d5f935..1098df6 100644
+--- a/media/libnbaio/AudioStreamOutSink.cpp
++++ b/media/libnbaio/AudioStreamOutSink.cpp
+@@ -80,6 +80,7 @@ status_t AudioStreamOutSink::getNextWriteTimestamp(int64_t *timestamp) {
+ 
+ status_t AudioStreamOutSink::getTimestamp(AudioTimestamp& timestamp)
+ {
++	#ifndef ICS_AUDIO_BLOB
+     if (mStream->get_presentation_position == NULL) {
+         return INVALID_OPERATION;
+     }
+@@ -91,6 +92,9 @@ status_t AudioStreamOutSink::getTimestamp(AudioTimestamp& timestamp)
+     }
+     timestamp.mPosition = position64;
+     return OK;
++#else
++    return INVALID_OPERATION;
++#endif
+ }
+ 
+ }   // namespace android
+-- 
+1.9.1
+
