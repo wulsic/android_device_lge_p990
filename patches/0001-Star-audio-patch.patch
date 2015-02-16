@@ -1,0 +1,58 @@
+From b343b35e6e4ab6ac725afe136a35390f9592f6dd Mon Sep 17 00:00:00 2001
+From: Wulsic <wulsic@hotmail.com>
+Date: Mon, 16 Feb 2015 23:59:19 +0100
+Subject: [PATCH 1/1] Star audio patch
+
+Change-Id: I39db3f67438dd897e2358a8512705d9d71597855
+---
+ include/hardware/audio.h | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/include/hardware/audio.h b/include/hardware/audio.h
+index f81bc96..550a3af 100644
+--- a/include/hardware/audio.h
++++ b/include/hardware/audio.h
+@@ -381,6 +381,7 @@ struct audio_stream_out {
+     int (*set_callback)(struct audio_stream_out *stream,
+             stream_callback_t callback, void *cookie);
+ 
++#ifndef ICS_AUDIO_BLOB
+ #ifdef QCOM_DIRECTTRACK
+     /**
+      * start audio data rendering
+@@ -391,7 +392,6 @@ struct audio_stream_out {
+      * stop audio data rendering
+      */
+     int (*stop)(struct audio_stream_out *stream);
+-#endif
+ 
+     /**
+      * Notifies to the audio driver to stop playback however the queued buffers are
+@@ -458,7 +458,6 @@ struct audio_stream_out {
+     int (*get_presentation_position)(const struct audio_stream_out *stream,
+                                uint64_t *frames, struct timespec *timestamp);
+ 
+-#ifdef QCOM_DIRECTTRACK
+     /**
+     * return the current timestamp after quering to the driver
+      */
+@@ -482,6 +481,7 @@ struct audio_stream_out {
+     int (*is_buffer_available) (const struct audio_stream_out *stream,
+                                      int *isAvail);
+ #endif
++#endif
+ 
+ };
+ typedef struct audio_stream_out audio_stream_out_t;
+@@ -682,6 +682,8 @@ struct audio_hw_device {
+      * playing, and AUDIO_MODE_IN_CALL when a call is in progress.
+      */
+     int (*set_mode)(struct audio_hw_device *dev, audio_mode_t mode);
++    int (*dummy1)();
++    int (*dummy2)();
+ 
+     /* mic mute */
+     int (*set_mic_mute)(struct audio_hw_device *dev, bool state);
+-- 
+1.9.1
+

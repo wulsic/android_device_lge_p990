@@ -50,3 +50,31 @@ else
        echo "     [FAIL]"
 fi
 
+echo "Apply patch to frameworks/av"
+echo -n "Apply patch 0001-ifdef-for-ICS-Audio-Blob-compatibility.patch"
+(cd frameworks/av; git am ../../device/lge/p990/patches/0001-ifdef-for-ICS-Audio-Blob-compatibility.patch) > /dev/null 2>&1
+if [ $? == 0 ]; then
+	echo "     [DONE]"
+else
+	(cd frameworks/av; git am --abort)
+	echo "     [FAIL]"
+fi
+
+echo -n "Apply patch 0002-Add-missing-functions-and-signatures-for-older-OMX-v.patch"
+(cd frameworks/av; git am ../../device/lge/p990/patches/0002-Add-missing-functions-and-signatures-for-older-OMX-v.patch) > /dev/null 2>&1
+if [ $? == 0 ]; then
+	echo "     [DONE]"
+else
+	(cd frameworks/av; git am --abort)
+	echo "     [FAIL]"
+fi
+
+echo "Apply patch to hardware/libhardware"
+echo -n "Apply patch 0001-Star-audio-patch.patch"
+(cd hardware/libhardware; git am ../../device/lge/p990/patches/0001-Star-audio-patch.patch) > /dev/null 2>&1
+if [ $? == 0 ]; then
+	echo "     [DONE]"
+else
+	(cd hardware/libhardware; git am --abort)
+	echo "     [FAIL]"
+fi
