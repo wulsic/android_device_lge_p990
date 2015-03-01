@@ -13,13 +13,8 @@ PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/recovery/postrecoveryboot.sh:recovery/root/sbin/postrecoveryboot.sh \
     $(LOCAL_PATH)/egl.cfg:system/lib/egl/egl.cfg \
     $(LOCAL_PATH)/prebuilt/setup-recovery:system/bin/setup-recovery \
-
-# Wifi files
-PRODUCT_PACKAGES += \
-	dhcpcd.conf \
-	hostapd \
-	wpa_supplicant \
-	wpa_supplicant.conf
+    $(LOCAL_PATH)/wpa_supplicant.conf:system/etc/wifi/wpa_supplicant.conf \
+    $(LOCAL_PATH)/dhcpcd.conf:system/etc/dhcpcd/dhcpcd.conf
 
 # Audio files
 PRODUCT_COPY_FILES += \
@@ -59,6 +54,7 @@ PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.usb.accessory.xml:system/etc/permissions/android.hardware.usb.accessory.xml
 
 PRODUCT_PROPERTY_OVERRIDES += \
+    ro.bq.gpu_to_cpu_unsupported=1 \
     sys.disable_ext_animation=1 \
     ro.telephony.call_ring.multiple=false \
     ro.telephony.call_ring.delay=3000 \
@@ -98,9 +94,6 @@ PRODUCT_PROPERTY_OVERRIDES += \
 # Our tegra drivers does not seem to support it
 PRODUCT_PROPERTY_OVERRIDES += \
     ro.zygote.disable_gl_preload=true
-
-# Always use the CPU pipeline for taking screenshots
-ro.bq.gpu_to_cpu_unsupported=true \
 
 # Disable JIT code cache to free up some ram when the device is running
 PRODUCT_PROPERTY_OVERRIDES += \
